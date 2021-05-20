@@ -1,0 +1,52 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: CUSTOMER-SERVICE
+          uri: lb://CUSTOMER-SERVICE
+          predicates:
+            - Path=/customer/**
+          filters:
+            - name: Hystrix
+              args:
+                name: customer-service
+                fallbackUri: forward:/customerService
+        - id: PRODUCT-SERVICE
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/product/**
+          filters:
+            - name: Hystrix
+              args:
+                name: product-service
+                fallbackUri: forward:/productService
+        - id: ORDER-SERVICE
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/orders/**
+          filters:
+            - name: Hystrix
+              args:
+                name: order-service
+                fallbackUri: forward:/orderService
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 60000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - hystrix.stream
+
